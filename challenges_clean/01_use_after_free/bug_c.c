@@ -6,7 +6,7 @@ typedef struct Widget Widget;
 
 typedef struct {
     void (*render)(Widget *self);
-    void (*on_event)(Widget **self, int code);
+    void (*on_event)(Widget *self, int code);
 } VTable;
 
 struct Widget {
@@ -32,9 +32,9 @@ static void dialog_render(Widget *self) {
     printf("  <<Dialog #%d>> %s\n", self->id, self->label);
 }
 
-static void widget_noop_event(Widget **self, int code) { (void)self; (void)code; }
+static void widget_noop_event(Widget *self, int code) { (void)self; (void)code; }
 
-static void dialog_on_event(Widget **self, int code);
+static void dialog_on_event(Widget *self, int code);
 
 static const VTable BUTTON_VT = { button_render, widget_noop_event };
 static const VTable LABEL_VT  = { label_render,  widget_noop_event };
@@ -53,9 +53,8 @@ static Widget *widget_new(const VTable *vt, int id, const char *label) {
     return w;
 }
 
-static void widget_destroy(Widget **w) {
-    free(*w);
-    *w = NULL;
+static void widget_destroy(Widget *w) {
+    free(w);
 }
 
 // 실제로 item[i] 주소에 값을 넣는 얘 
@@ -67,7 +66,8 @@ static void screen_add(Screen *s, Widget *w) {
 
 static void screen_dispatch(Screen *s, int code) {
     for (int i = 0; i < s->count; i++) {
-        s->items[i]->vtbl->on_event(&s->items[i], code);
+        Widget *w = s->items[i];
+        w->vtbl->on_event(w, code); // item[2] 일떄  dialog_on_event로 점프
     }
 }
 /*
@@ -103,17 +103,19 @@ static void dialog_render(Widget *self) {
 static void screen_render(Screen *s) {
     for (int i = 0; i < s->count; i++) {
         Widget *w = s->items[i];
-        if (!w) continue;
-        w->vtbl->render(w);
+        if(w->closed == 0){
+            w->vtbl->render(w);
+        }
     }
 }
 /*
 여기는 item의 주소를 복사해서 줌 
 */
-static void dialog_on_event(Widget **self, int code) {
+static void dialog_on_event(Widget *self, int code) {
     if (code == 1) {
-        (*self)->closed = 1;
+        self->closed = 1;
         widget_destroy(self);
+
     }
 }
 
@@ -147,6 +149,9 @@ int main(void) {
     screen_render(&s);
 
     free(status);
-    for (int i = 0; i < s.count; i++) free(s.items[i]);
+    for (int i = 0; i < s.count; i++) {
+        if (s.items[i]->closed == 0) free(s.items[i]);
+    }
+    
     return 0;
 }
