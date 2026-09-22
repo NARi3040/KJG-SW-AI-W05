@@ -14,22 +14,31 @@ static void list_init(IntList *l) {
     if (!l->data) { perror("malloc"); exit(1); }
 }
 
+/*
+newcap 32
+
+len 16
+cap 16
+len == cap일떄 여기 온다 
+그럼 newcap 2배 시키고 새로 공간을 할당해주는 것 같음
+*/
 static void list_ensure(IntList *l, size_t need) {
     if (need <= l->cap) return;
 
-    size_t newcap = l->cap ? l->cap * 2 : 8;
-    while (newcap < need) newcap *= 2;
+    size_t newcap = l->cap ? l->cap * 2 : 8; // l->cap가 없으면 기본 8 / 있으면 l->cap * 2
+    while (newcap < need) newcap *= 2; // 
 
-    int *p = realloc(l->data, l->cap * sizeof(int));
+    int *p = realloc(l->data, l->cap * sizeof(int)); // len == cap == 16일 때 여기서 죽음 / l->data 공간에  l->cap * sizeof(int)
     if (!p) { perror("realloc"); free(l->data); exit(1); }
 
     l->data = p;
     l->cap  = newcap;
 }
 
+// 초반에 잘되다가 list_ensure넘기는 도중에 list_ensure에서 오류
 static void list_push(IntList *l, int x) {
-    if (l->len == l->cap) list_ensure(l, l->cap + 1);
-    l->data[l->len++] = x;
+    if (l->len == l->cap) list_ensure(l, l->cap + 1); // IntList랑 cap(need)를 +1까지 해주고 넘김
+    l->data[l->len++] = x; // 아니면 그냥 len ++
 }
 
 static long long list_sum(const IntList *l) {

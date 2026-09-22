@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ROWS 32
-#define COLS 4
+#define ROWS 32 // 열
+#define COLS 4 // 행
 
 static void dirty_heap(void) {
     void *scratch = malloc(ROWS * sizeof(int *));
@@ -12,13 +12,13 @@ static void dirty_heap(void) {
         free(scratch);
     }
 }
-
+// 매트릭스 만들기
 static int **make_matrix(void) {
 
-    int **rows = malloc(ROWS * sizeof(int *));
-    if (!rows) { perror("malloc"); exit(1); }
+    int **rows = calloc(ROWS, sizeof(int *)); // 빈 행 = NULL
+    if (!rows) { perror("calloc"); exit(1); } // 실패
 
-    for (int i = 0; i < ROWS; i += 2) {
+    for (int i = 0; i < ROWS; i += 2) { // 한 칸씩 넣어도 되긴함
         int *r = malloc(COLS * sizeof(int));
         for (int j = 0; j < COLS; j++) r[j] = i * COLS + j;
         rows[i] = r;
@@ -28,7 +28,8 @@ static int **make_matrix(void) {
 
 static long row_sum(int **rows, int nrows) {
     long total = 0;
-    for (int i = 0; i < nrows; i++) {
+    for (int i = 0; i < nrows; i++) { // 사실 두칸씩 읽어도 됨
+        if (!rows[i]) continue; // 빈 행 건너뛰기
         for (int j = 0; j < COLS; j++) {
             total += rows[i][j];
         }
@@ -46,7 +47,7 @@ int main(void) {
 
     printf("sum = %ld\n", s);
 
-    for (int i = 0; i < ROWS; i += 2) free(rows[i]);
+    for (int i = 0; i < ROWS; i++) free(rows[i]);
     free(rows);
     return 0;
 }

@@ -10,17 +10,17 @@ typedef struct {
 } Headers;
 
 static char *skip_ws(char *s) {
-    while (*s == ' ' || *s == '\t') s++;
+    while (*s == ' ' || *s == '\t') s++; // 띄어쓰기나 탭 제거
     return s;
 }
 
 static void parse_headers(char *text, Headers *h) {
     for (char *line = strtok(text, "\n"); line != NULL; line = strtok(NULL, "\n")) {
         char *colon = strchr(line, ':');
-
-        *colon = '\0';
+        if(!colon) continue;
+        *colon = '\0'; // Host: example.com\0 -> Host\0 example.com\0 / ""
         char *key = line;
-        char *val = skip_ws(colon + 1);
+        char *val = skip_ws(colon + 1); // " example.com\0"
 
         if (h->count < MAX_HEADERS) {
             h->keys[h->count] = key;

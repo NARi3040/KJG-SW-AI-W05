@@ -3,30 +3,31 @@
 #include <string.h>
 
 #define MAX_LINES 8
+// 그만 정신을 잃고 말았습니다.
 typedef struct {
-    char **lines;
-    int    count;
+    char *lines[MAX_LINES];
+    int   count;
 } LineView;
-
-static void view_set(LineView *out, char **arr, int n) {
-    out->lines = arr;
-    out->count = n;
-}
-
+/*
+라인 별로 분리
+\n로 구분
+*/
 static void split_lines(LineView *out, char *text) {
-    char *parts[MAX_LINES];
-    int n = 0;
-    for (char *ln = strtok(text, "\n"); ln && n < MAX_LINES; ln = strtok(NULL, "\n"))
-        parts[n++] = ln;
-
-    view_set(out, parts, n);
-
+    out->count = 0;
+    for (char *ln = strtok(text, "\n"); ln && out->count < MAX_LINES; ln = strtok(NULL, "\n")) {
+        // fprintf(stderr, "split_lines: parts  주소 = %p\n", out->lines[out->count++]);
+        fprintf(stderr, "\tlines[%d] = %p (%s)\n", out->count, (void*)ln, ln);
+        out->lines[out->count++] = ln;
+    }
 }
-
+// 이상한 값으로 변경 / 왜 하지?
 static void warm_stack(void) {
     char *scratch[MAX_LINES];
-    for (int i = 0; i < MAX_LINES; i++)
+    fprintf(stderr, "warm_stack : scratch주소 = %p\n", (void*)scratch);
+    for (int i = 0; i < MAX_LINES; i++) {
+        fprintf(stderr, "\twarm_stack : scratch[%d]주소 = %p\n", i,(void*)scratch[i]);
         scratch[i] = (char *)0x4141414141414141ULL;
+    }
     __asm__ volatile("" :: "r"(scratch) : "memory");
 }
 
@@ -35,7 +36,9 @@ int main(void) {
 
     LineView v;
     split_lines(&v, text);
+    fprintf(stderr, "리턴 직후  : v.lines[0] = %p\n", (void*)v.lines[0]);
     warm_stack();
+    fprintf(stderr, "warm 이후  : v.lines[0] = %p\n", (void*)v.lines[0]);
 
     long checksum = 0;
     for (int i = 0; i < v.count; i++)
