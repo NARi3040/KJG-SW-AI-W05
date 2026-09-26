@@ -28,18 +28,18 @@ static void row_print(const Row *r) {
 }
 
 static void row_free(Row *r) {
-    for (int i = 0; i < r->n; i++) {
-        free(r->fields[i]);
-    }
+    free(r->base);
+    r->base = NULL;
     r->n = 0;
 }
+
 
 int main(void) {
     Row r;
     parse_row(&r, "id,name,dept,salary");
     row_print(&r);
 
-    row_free(&r);
+    row_free(&r); // 문제 
     printf("done\n");
     return 0;
 }
